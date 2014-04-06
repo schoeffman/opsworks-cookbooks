@@ -22,8 +22,8 @@ mysql_database 'siteDb' do connection ({:host => "localhost", :username => 'root
 
   action :create
 end
-
-execute "import_database" do
-  command "mysql -u root -p#{node['mysql']['server_root_password']} siteDb < #{node['mysql']['projectRoot']}#{node['mysql']['dump_filename']}"
-  action :run
-end
+#
+#execute "import_database" do
+#  command "mysql -u root -p#{node['mysql']['server_root_password']} siteDb < #{node['mysql']['projectRoot']}#{node['mysql']['dump_filename']}"
+#  action :run
+#end
