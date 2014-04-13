@@ -1,51 +1,50 @@
-#
-# Cookbook Name:: mysql
-# Recipe:: default
-#
-# Copyright 2008-2013, Opscode, Inc.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+require 'resolv'
 
-::Chef::Recipe.send(:include, Opscode::OpenSSL::Password)
-::Chef::Recipe.send(:include, Opscode::Mysql::Helpers)
+include_recipe 'mysql::client'
+include_recipe 'mysql::prepare'
 
-if Chef::Config[:solo]
-  missing_attrs = %w[
-    server_debian_password
-    server_root_password
-    server_repl_password
-  ].select { |attr| node['mysql'][attr].nil? }.map { |attr| %Q{node['mysql']['#{attr}']} }
+package 'mysql-server'
 
-  unless missing_attrs.empty?
-    Chef::Application.fatal! "You must set #{missing_attrs.join(', ')} in chef-solo mode." \
-    " For more information, see https://github.com/opscode-cookbooks/mysql#chef-solo-note"
+if platform?('ubuntu') && node[:platform_version].to_f < 10.04
+  remote_file '/tmp/mysql_init.patch' do
+    source 'mysql_init.patch'
   end
-else
-  # generate all passwords
-  node.set_unless['mysql']['server_debian_password'] = secure_password
-  node.set_unless['mysql']['server_root_password']   = secure_password
-  node.set_unless['mysql']['server_repl_password']   = secure_password
-  node.save
+
+  execute 'Fix MySQL init.d script to sleep longer - needed for instances with more RAM' do
+    cwd '/etc/init.d'
+    command 'patch -p0 mysql < /tmp/mysql_init.patch'
+    action :run
+    only_if do
+      File.read('/etc/init.d/mysql').match(/sleep 1/)
+    end
+  end
 end
 
-case node['platform_family']
-when 'rhel'
-  include_recipe 'mysql::_server_rhel'
-when 'debian'
-  include_recipe 'mysql::_server_debian'
-when 'mac_os_x'
-  include_recipe 'mysql::_server_mac_os_x'
-when 'windows'
-  include_recipe 'mysql::_server_windows'
+if platform?('debian','ubuntu')
+  include_recipe 'mysql::apparmor'
+end
+
+include_recipe 'mysql::service'
+
+service 'mysql' do
+  action :enable
+end
+
+service 'mysql' do
+  action :stop
+end
+
+include_recipe 'mysql::ebs'
+include_recipe 'mysql::config'
+
+service 'mysql' do
+  action :start
+end
+
+if platform?('centos','redhat','fedora','amazon')
+  execute 'assign root password' do
+    command "/usr/bin/mysqladmin -u root password \"#{node[:mysql][:server_root_password]}\""
+    action :run
+    only_if "/usr/bin/mysql -u root -e 'show databases;'"
+  end
 end
