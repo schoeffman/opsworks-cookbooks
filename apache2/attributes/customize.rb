@@ -11,4 +11,3 @@
 #normal[:apache][:contact] = 'you@your-site.com'
 #normal[:apache][:timeout] = 60
 
-default[:apache][:document_root] = '/srv/www/schoeftwarephpapp/site'

@@ -3,7 +3,7 @@
   <% if @params[:server_aliases] && !@params[:server_aliases].empty? -%>
   ServerAlias <% @params[:server_aliases].each do |a| %><%= "#{a}" %> <% end %>
   <% end -%>
-  DocumentRoot /srv/www/schoeftwarephpapp/current/site
+  DocumentRoot <%= @params[:docroot] %>
   RewriteEngine On
   
   <Directory /srv/www/schoeftwarephpapp/current/site/>
