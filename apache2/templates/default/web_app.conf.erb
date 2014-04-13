@@ -3,10 +3,10 @@
   <% if @params[:server_aliases] && !@params[:server_aliases].empty? -%>
   ServerAlias <% @params[:server_aliases].each do |a| %><%= "#{a}" %> <% end %>
   <% end -%>
-  DocumentRoot <%= @params[:docroot] %>
+  DocumentRoot /srv/www/schoeftwarephpapp/current/site
   RewriteEngine On
   
-  <Directory <%= @params[:docroot] %>>
+  <Directory /srv/www/schoeftwarephpapp/current/site/>
     Options FollowSymLinks
     AllowOverride All
     Order allow,deny
