@@ -2,19 +2,8 @@
 include_recipe "mysql::server"
 include_recipe "database::mysql"
 
-#use this tempate file as the nginx module
-template "/etc/nginx/sites-available/site" do
-  source "config.erb"
-  mode 0777
-  owner node.nginx.user
-  group node.nginx.user
-end
-
-nginx_site "site" #name of module
-
 # create a mysql database - use mysql -u root -proot in order to see database
 mysql_database 'siteDb' do connection ({:host => "localhost", :username => 'root', :password => "root"})
-
   action :create
 end
 
